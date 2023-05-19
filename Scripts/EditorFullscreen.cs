@@ -37,8 +37,8 @@ public static class EditorFullscreen
 	#endregion
 
 	#region Constants
-	const string idLastMenuPtr = "toggleFullscreen_lastMenuPtr";
-	const string idEditorIsFullscreen = "toggleFullscreen_isFullscreen";
+	const string lastMenuPtr = "toggleFullscreen_lastMenuPtr";
+	const string isFullscreen = "toggleFullscreen_isFullscreen";
 	const long WS_CAPTION = 0x00C00000;
 	const long WS_SYSMENU = 0x00080000;
 	const long WS_THICKFRAME = 0x00400000;
@@ -56,8 +56,8 @@ public static class EditorFullscreen
 		var style = GetWindowLongPtr(unity, GWL_STYLE);
 
 		if(menu != IntPtr.Zero){
-			PlayerPrefs.SetString(idLastMenuPtr, menu.ToString());
-			PlayerPrefs.SetInt(idEditorIsFullscreen, 1);
+			PlayerPrefs.SetString(lastMenuPtr, menu.ToString());
+			PlayerPrefs.SetInt(isFullscreen, 1);
 
 			int count = GetMenuItemCount(menu);
 			for (int i = 0; i < count; i++) RemoveMenu(menu, 0, (MF_BYPOSITION | MF_REMOVE));
@@ -69,8 +69,8 @@ public static class EditorFullscreen
 			ShowWindow(unity, SW_MINIMAZE);
 			ShowWindow(unity, SW_MAXIMIZE);
 		} else {
-			var lastMenuPtr = long.Parse(PlayerPrefs.GetString(idLastMenuPtr));
-			PlayerPrefs.SetInt(idEditorIsFullscreen, 0);
+			var lastMenuPtr = long.Parse(PlayerPrefs.GetString(EditorFullscreen.lastMenuPtr));
+			PlayerPrefs.SetInt(isFullscreen, 0);
 
 			SetWindowLongPtr(unity, GWL_STYLE, new IntPtr(style.ToInt64() | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME));
 
@@ -82,11 +82,13 @@ public static class EditorFullscreen
 		DrawMenuBar(unity);
 	}
 
-	[UnityEditor.Callbacks.DidReloadScripts]
+ 	[UnityEditor.Callbacks.DidReloadScripts]
 	static void Reload(){
-		if (PlayerPrefs.GetInt(idEditorIsFullscreen, 0) == 1){
+		if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+
+		if (PlayerPrefs.GetInt(isFullscreen, 0) == 1){
 			ToggleFullscreen();
 		}
-	}
+	} 	
 }
 #endif
