@@ -1,0 +1,27 @@
+#pragma kernel GenerateMaskMap
+
+RWTexture2D<float4> Result;
+
+Texture2D metallic;
+Texture2D ao;
+Texture2D detail;
+Texture2D smoothness;
+
+bool isRoughness;
+
+float GetPixel(Texture2D tex, float2 pixel, bool invert){
+    float greyscale = tex[pixel].r * 0.299f + tex[pixel].g * 0.587f + tex[pixel].b * 0.114f;
+    return invert ? 1 - greyscale : greyscale;
+}
+
+[numthreads(8,8,1)]
+void GenerateMaskMap (uint3 id : SV_DispatchThreadID){
+    float4 maskMapPixel = 0;
+
+    maskMapPixel.r = GetPixel(metallic, id.xy, false);
+    maskMapPixel.g = GetPixel(ao, id.xy, false);
+    maskMapPixel.b = GetPixel(detail, id.xy, false);
+    maskMapPixel.a = GetPixel(smoothness, id.xy, isRoughness);
+
+    Result[id.xy] = maskMapPixel;
+}
