@@ -14,12 +14,13 @@ public class MaskGeneratorWindow : EditorWindow
     private Texture2D detailMaskTexture;
     private Texture2D smoothnessTexture;
 
-    private float metallicValue = 0.5f;
-    private float aoValue = 0.5f;
+    private float metallicValue = 0f;
+    private float aoValue = 1f;
     private float smoothnessValue = 0.5f;
     private bool isRoughnessMap = false;
 
     private Vector2 scrollPosition = Vector2.zero;
+    private string savePath;
 
     [MenuItem("Tools/Mask Map Generator")]
     public static void ShowWindow(){
@@ -40,6 +41,7 @@ public class MaskGeneratorWindow : EditorWindow
         string projectPath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         string relativeShaderPath = shaderPath.Replace(projectPath, "").TrimStart(Path.DirectorySeparatorChar);
         shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(relativeShaderPath);
+
         return true;
     }
 
@@ -147,6 +149,9 @@ public class MaskGeneratorWindow : EditorWindow
             if (tex == null) continue;
             width = tex.width;
             height = tex.height;
+            savePath = GetDirectoryPath(tex);
+            EditorPrefs.SetString("lastUsedSavePath", savePath);
+            Debug.Log($"Save path: {savePath}");
             break;
         }
 
@@ -228,8 +233,14 @@ public class MaskGeneratorWindow : EditorWindow
         return tmpTex;
     }
 
+    private string GetDirectoryPath(Texture2D tex){
+        string assetPath = AssetDatabase.GetAssetPath(tex);
+        string directoryPath = System.IO.Path.GetDirectoryName(assetPath);
+        return directoryPath;
+    } 
+
     private string SaveMaskMap(Texture2D maskMap){
-        string path = EditorUtility.SaveFilePanelInProject("Save Mask Map", "mask_map", "png", "Please enter a file name to save the mask map to");
+        string path = EditorUtility.SaveFilePanelInProject("Save Mask Map", "mask_map", "png", "Please enter a file name to save the mask map to", savePath);
         if (path.Length > 0){
             byte[] pngData = maskMap.EncodeToPNG();
             System.IO.File.WriteAllBytes(path, pngData);
